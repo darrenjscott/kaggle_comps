@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
@@ -46,13 +47,28 @@ def seasonal_plot(X, y, period, freq, ax):
     return ax
 
 
+def make_lag_plots(y: pd.Series, lags=6):
+    lag_tabs = { f'Lag{i}': y.shift(i) for i in range(1, lags+1)}
+    lag_tabs['Lag0'] = y
+    lag_df = pd.DataFrame(lag_tabs, index=y.index)
+
+    fig, axes = plt.subplots(lags, 1)
+
+    for ax, i in zip(axes, range(lags)):
+        ax = sns.regplot(data=lag_df, x=lag_df[f'Lag{i}'], y=lag_df[f'Lag{i+1}'], ax=ax)
+
+    return fig, axes
+
+
 # Just for testing purposes
 if __name__ == '__main__':
+    import numpy as np
     data = {
-        'values': [1.0, 0.0, 0.0, 2.0, 3.0, 0.0, 0.0, 0.0, 4.0, 5.0, 0.0, 6.0]
+        'values': np.arange(30)
     }
     index = pd.period_range(start='2012-01-01', periods=len(data['values']), freq='D')
     df = pd.DataFrame(data, index=index)
     ser = df.squeeze()
 
-    seasonal_plot(ser, 'new_col', 'week', 'dayofweek',None)
+    _ = make_lag_plots(ser, lags=3)
+    #seasonal_plot(ser, 'new_col', 'week', 'dayofweek',None)
